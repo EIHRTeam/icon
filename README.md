@@ -12,7 +12,7 @@ Vectorized Arknights: Endfield in game icons.<br>
 
 ## Index / 目录索引
 
-The file structure of this repository is outlined below.
+The file structure of this repository is outlined below.<br>
 本仓库的文件结构如下所述。
 
 ```text
