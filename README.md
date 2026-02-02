@@ -10,6 +10,26 @@
 Vectorized Arknights: Endfield in game icons.<br>
 矢量化的终末地游戏内图标。
 
+## Index / 目录索引
+
+The file organization of this repository is described below to facilitate understanding of the asset pipeline.  
+本仓库的文件组织结构如下所述，以便于理解资产处理流程。
+
+```text
+icon
+├── factory/                基建技能icon (.svg)
+│   │                       Base skill icons (.svg)
+│   │
+│   └── png/                基建技能icon (.png)
+│                           Base skill icons (.png)
+│
+├── script/                 项目维护与资产转换脚本
+│                           Project maintenance and asset conversion scripts
+│
+└── .github/               CI/CD 工作流配置
+                           CI/CD workflow configurations
+```
+
 ## License / 授权
 
 All assets in this repository are licensed under the [Creative Commons Attribution-ShareAlike 4.0 International](https://creativecommons.org/licenses/by-sa/4.0/) license.
