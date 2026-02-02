@@ -1,3 +1,4 @@
 # List of directories to package for release
 # Format similar to .gitignore (glob patterns supported)
 factory
+logo

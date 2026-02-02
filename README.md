@@ -10,6 +10,11 @@
 Vectorized Arknights: Endfield in game icons.<br>
 矢量化的终末地游戏内图标。
 
+## Download / 下载
+
+Download icons at [Release](https://github.com/EIHRTeam/icon/releases/latest) page.<br>
+请前往 [Release](https://github.com/EIHRTeam/icon/releases/latest) 下载图标。
+
 ## Index / 目录索引
 
 The file structure of this repository is outlined below.<br>
