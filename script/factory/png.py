@@ -60,12 +60,12 @@ def convert_svgs():
         print(f"Processing: {filename}...", end=" ", flush=True)
 
         try:
-            # 1. Convert SVG to 170x170 PNG bytes using CairoSVG
+            # 1. Convert SVG to 160x160 PNG bytes using CairoSVG
             # This preserves aspect ratio if we don't force both dimensions, 
             # but here we set output_width/height which might scale/crop.
             # Ideally for icons we want 'fit to box'. 
             # CairoSVG's output_width/height scales the SVG to fit that box.
-            png_data = cairosvg.svg2png(url=input_path, output_width=170, output_height=170)
+            png_data = cairosvg.svg2png(url=input_path, output_width=160, output_height=160)
             
             if not png_data:
                 print("[Failed] Empty output")
@@ -77,8 +77,8 @@ def convert_svgs():
             # 3. Create 204x204 Transparent Background
             background = Image.new('RGBA', (204, 204), (0, 0, 0, 0))
             
-            # 4. Center the 170x170 image
-            # (204 - 170) / 2 = 17 pixel padding
+            # 4. Center the 160x160 image
+            # (204 - 160) // 2 = 22 pixel padding
             bg_w, bg_h = background.size
             fg_w, fg_h = foreground.size
             offset = ((bg_w - fg_w) // 2, (bg_h - fg_h) // 2)
