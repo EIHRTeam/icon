@@ -1,2 +1,5 @@
 *.ai
 gude*.log
+.gemini/
+gha-creds-*.json
+gemini*.*
