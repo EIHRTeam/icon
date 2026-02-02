@@ -1,0 +1,94 @@
+name: Manual Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag version (e.g., v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required to see all tags
+
+      - name: Setup Git
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+
+      - name: Manage Tag
+        run: |
+          TAG_NAME="${{ inputs.tag }}"
+          
+          # Check if tag exists locally
+          if git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Tag $TAG_NAME exists locally. Deleting..."
+            git tag -d "$TAG_NAME"
+          fi
+
+          # Check if tag exists remotely
+          if git ls-remote --exit-code --tags origin "$TAG_NAME" >/dev/null 2>&1; then
+            echo "Tag $TAG_NAME exists remotely. Deleting..."
+            git push origin :refs/tags/$TAG_NAME
+          fi
+
+          # Create and push new tag
+          echo "Creating tag $TAG_NAME..."
+          git tag "$TAG_NAME"
+          git push origin "$TAG_NAME"
+
+      - name: Package Assets
+        id: package
+        run: |
+          mkdir -p release_assets
+          
+          if [ ! -f .github/release-list.txt ]; then
+            echo "Error: .github/release-list.txt not found."
+            exit 1
+          fi
+
+          # Read lines, ignoring comments and empty lines
+          grep -v '^\s*#' .github/release-list.txt | grep -v '^\s*$' | while read -r line; do
+            # Trim whitespace
+            target_path=$(echo "$line" | xargs)
+            
+            if [ -z "$target_path" ]; then continue; fi
+
+            # Check if path matches any files/dirs
+            # Use echo to expand globs if any
+            matched_files=$(sh -c "ls -d $target_path 2>/dev/null" || true)
+
+            if [ -z "$matched_files" ]; then
+              echo "Warning: No files found for pattern '$target_path'"
+              continue
+            fi
+
+            # Create a safe filename for the zip
+            # Replace / and \ with _
+            safe_name=$(echo "$target_path" | sed 's/[/\\]/_/g')
+            zip_filename="release_assets/${safe_name}.zip"
+
+            echo "Zipping $target_path to $zip_filename..."
+            
+            # Zip the files
+            # -r: recursive
+            # -q: quiet
+            zip -r -q "$zip_filename" $target_path
+          done
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ inputs.tag }}
+          name: ${{ inputs.tag }}
+          files: release_assets/*.zip
+          draft: false
+          prerelease: false
