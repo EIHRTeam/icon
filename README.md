@@ -12,8 +12,8 @@ Vectorized Arknights: Endfield in game icons.<br>
 
 ## Index / 目录索引
 
-The file organization of this repository is described below to facilitate understanding of the asset pipeline.  
-本仓库的文件组织结构如下所述，以便于理解资产处理流程。
+The file structure of this repository is outlined below.
+本仓库的文件结构如下所述。
 
 ```text
 icon
@@ -26,8 +26,8 @@ icon
 ├── script/                 项目维护与资产转换脚本
 │                           Project maintenance and asset conversion scripts
 │
-└── .github/               CI/CD 工作流配置
-                           CI/CD workflow configurations
+└── .github/                CI/CD 工作流配置
+                            CI/CD workflow configurations
 ```
 
 ## License / 授权
