@@ -55,37 +55,79 @@ jobs:
             exit 1
           fi
 
-          # Prepare list of all paths for the aggregate zip
-          all_paths=""
+          # Function to clean temp dirs
+          cleanup() {
+            rm -rf temp_zip_*
+          }
+          trap cleanup EXIT
 
-          # Read lines, ignoring comments and empty lines
+          # 1. Process individual archives
           grep -v '^\s*#' .github/release-list.txt | grep -v '^\s*$' | while read -r line; do
-            # Trim whitespace
             target_path=$(echo "$line" | xargs)
-            
             if [ -z "$target_path" ]; then continue; fi
 
-            # Check if path matches any files/dirs
-            # Use echo to expand globs if any
-            matched_files=$(sh -c "ls -d $target_path 2>/dev/null" || true)
-
-            if [ -z "$matched_files" ]; then
-              echo "Warning: No files found for pattern '$target_path'"
+            # Verify existence
+            if ! ls -d $target_path >/dev/null 2>&1; then
+              echo "Warning: '$target_path' not found, skipping."
               continue
             fi
 
-            # Create a safe filename for the zip
-            # Replace / and \ with _
-            safe_name=$(echo "$target_path" | sed 's/[/\\]/_/g')
+            safe_name=$(echo "$target_path" | sed 's/[\/\\]/_/g')
             zip_filename="release_assets/${safe_name}.zip"
+            temp_dir="temp_zip_${safe_name}"
 
-            echo "Zipping $target_path to $zip_filename..."
+            echo "Creating $zip_filename..."
+            mkdir -p "$temp_dir"
+
+            # Copy LICENSE if exists
+            if [ -f "LICENSE" ]; then cp "LICENSE" "$temp_dir/"; fi
+
+            # Copy target contents preserving structure relative to root?
+            # Actually, user usually expects: unzip -> folder/file
+            # If we zip "factory/png", we want the zip to contain "factory/png/..."
+            # The simplest way is to zip the LICENSE and the path together into the target zip.
+            # But we need LICENSE at the root of the zip.
+            # To do this cleanly without modifying source tree:
+            # We copy target_path inside temp_dir? No, that moves files.
             
-            # Zip the files
-            # -r: recursive
-            # -q: quiet
+            # Better approach:
+            # 1. Copy LICENSE to temp_dir/LICENSE
+            # 2. cd temp_dir, zip LICENSE into absolute path zip
+            # 3. cd root, zip target_path into absolute path zip
+            
+            # Step 1 & 2: Zip LICENSE
+            zip -j -q "$zip_filename" LICENSE
+
+            # Step 3: Append target path (preserving relative path structure)
             zip -r -q "$zip_filename" $target_path
           done
+
+          # 2. Create ALL.zip
+          echo "Creating ALL.zip..."
+          
+          # Gather valid paths
+          valid_paths=""
+          while read -r line; do
+             target_path=$(echo "$line" | xargs)
+             if [ -z "$target_path" ]; then continue; fi
+             if ls -d $target_path >/dev/null 2>&1; then
+                 valid_paths="$valid_paths $target_path"
+             fi
+          done < <(grep -v '^\s*#' .github/release-list.txt | grep -v '^\s*$')
+
+          if [ -n "$valid_paths" ]; then
+            # We want LICENSE and README.md at root of ALL.zip
+            # Similar strategy: zip LICENSE and README first, then append paths
+            
+            # Create/Overwrite ALL.zip with LICENSE and README.md (junk paths to keep them at root)
+            zip -j -q "release_assets/ALL.zip" LICENSE README.md
+            
+            # Append all data paths (keeping directory structure)
+            # We explicitly allow word splitting for valid_paths here as it contains multiple paths
+            zip -r -q "release_assets/ALL.zip" $valid_paths
+          else
+            echo "Warning: No valid paths found for ALL.zip"
+          fi
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
